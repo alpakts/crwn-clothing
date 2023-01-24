@@ -4,6 +4,7 @@ import {
   signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 const firebaseConfig = {
@@ -23,19 +24,26 @@ provider.setCustomParameters({
 
 export const auth = getAuth();
 export const signInWithgooglePopup = () => signInWithPopup(auth, provider);
-export const db=getFirestore();
-export const createUserDocFromAuth=async (userauth)=>{
-    const userDocRef=doc(db,'users',userauth.uid)
-   
-    const userSnapshot=await getDoc(userDocRef);
-   if (!userSnapshot.exists()) {
-    const {displayName,email}=userauth
-    const createdAt=new Date();
+export const db = getFirestore();
+export const createUserDocFromAuth = async (userauth,additionalInfo) => {
+  if (!userauth) return;
+  additionalInfo={};
+  const userDocRef = doc(db, "users", userauth.uid);
+
+  const userSnapshot = await getDoc(userDocRef);
+  if (!userSnapshot.exists()) {
+    const { displayName, email } = userauth;
+    const createdAt = new Date();
     try {
-        await setDoc(userDocRef,{displayName,email,createdAt})
+      await setDoc(userDocRef, { displayName, email, createdAt,...additionalInfo });
     } catch (error) {
-       console.log("Error creating the usetr",error.message) 
+      console.log("Error creating the usetr", error.message);
     }
-   }
-   return userDocRef;
-}
+  }
+  return userDocRef;
+};
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+
+  return await createUserWithEmailAndPassword(auth, email, password);
+};
